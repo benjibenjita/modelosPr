@@ -1,0 +1,5 @@
+{
+  "name": "ESPE 3D Model Visualization",
+  "description": "A 3D interactive reconstruction of the ESPE (Universidad de las Fuerzas Armadas) building facade using React Three Fiber.",
+  "requestFramePermissions": []
+}
