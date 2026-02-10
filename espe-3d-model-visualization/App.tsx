@@ -1,76 +1,141 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, useState, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Sky, ContactShadows, Loader } from '@react-three/drei';
-import { EspeBuilding } from './components/EspeBuilding';
+import { OrbitControls, Sky, ContactShadows, Environment } from '@react-three/drei';
+import * as THREE from 'three';
+import { Infrastructure } from './components/Infrastructure';
+import AdministrativeBuilding from './components/AdministrativeBuilding';
+import { HeroBlock, StandardBlock, AnnexBlock, DepartmentComplex } from './components/EspeBuilding';
+import Library from './components/Library';
 import { Bleachers } from './components/Bleachers';
+import { Entrance } from './components/Entrance';
+import { CivicPlaza } from './components/CivicPlaza';
+import { Interface } from './components/UI/Interface';
+import { CameraController } from './components/CameraController';
+import { Weather } from './components/Weather';
+import { POI } from './components/POI';
+import { NetworkLayer } from './components/NetworkLayer';
 
-const App: React.FC = () => {
+const App = () => {
+  const [targetPosition, setTargetPosition] = useState<[number, number, number] | null>(null);
+  const [weatherMode, setWeatherMode] = useState<'clear' | 'rain' | 'fog'>('clear');
+  const [showNetwork, setShowNetwork] = useState(false);
+
+  // Clear target position when user interacts manually to allow smooth OrbitControl
+  const handleUserInteraction = () => {
+    if (targetPosition) setTargetPosition(null);
+  };
+
+  const handleNavigate = (position: [number, number, number]) => {
+    setTargetPosition(position);
+  };
+
   return (
-    <div className="relative w-full h-screen bg-gray-200">
-      {/* UI Overlay */}
-      <div className="absolute top-4 left-4 z-10 p-4 bg-white/90 backdrop-blur-md rounded-lg shadow-lg max-w-sm border border-gray-200">
-        <h1 className="text-xl font-bold text-gray-800">Universidad de las Fuerzas Armadas ESPE</h1>
-        <p className="text-sm text-gray-600 mt-1">
-          Interactive 3D reconstruction.
-        </p>
-        <div className="mt-2 text-xs text-gray-500 flex gap-2">
-          <span className="bg-gray-100 px-2 py-1 rounded border border-gray-300">Left Click: Rotate</span>
-          <span className="bg-gray-100 px-2 py-1 rounded border border-gray-300">Right Click: Pan</span>
-        </div>
-      </div>
+    <div style={{ width: "100vw", height: "100vh", position: 'relative', background: '#0a0a12' }}>
 
-      <Canvas shadows camera={{ position: [15, 8, 20], fov: 45 }}>
-        {/* Solid background color to ensure visibility */}
-        <color attach="background" args={['#87CEEB']} />
+      {/* UI Overlay */}
+      <Interface
+        onNavigate={handleNavigate}
+        onWeatherChange={setWeatherMode}
+        onToggleNetwork={() => setShowNetwork(!showNetwork)}
+        showNetwork={showNetwork}
+      />
+
+      <Canvas shadows camera={{ position: [100, 100, 100], fov: 45 }} dpr={[1, 2]}> {/* Optimize DPR */}
+        <fog attach="fog" args={weatherMode === 'fog' ? ['#aaaaaa', 10, 100] : ['#ffffff', 50, 300]} />
+        <ambientLight intensity={0.5} />
+        <directionalLight
+          position={[50, 50, 25]}
+          intensity={1}
+          castShadow
+          shadow-mapSize-width={1024} // Reduced from 2048 for performance
+          shadow-mapSize-height={1024}
+        />
+        <hemisphereLight skyColor="#ffffff" groundColor="#444444" intensity={0.6} />
 
         <Suspense fallback={null}>
-          <ambientLight intensity={0.8} />
-          <directionalLight
-            position={[10, 20, 10]}
-            intensity={2}
-            castShadow
-            shadow-mapSize={[2048, 2048]}
-            shadow-camera-left={-20}
-            shadow-camera-right={20}
-            shadow-camera-top={20}
-            shadow-camera-bottom={-20}
-          />
-          <hemisphereLight intensity={0.5} groundColor="#444444" />
+          <Environment preset="city" />
+          <CameraController targetPosition={targetPosition} />
+          <Weather mode={weatherMode} />
+          {showNetwork && <NetworkLayer />}
 
-          <group position={[0, -2, 0]}>
-            <EspeBuilding />
-            <Bleachers position={[-19, 0, 26]} rotation={[0, Math.PI, 0]} />
+          <group>
+            {/* --- JOINED DEPARTMENT COMPLEXES --- */}
 
-            {/* Ground Plane */}
-            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]} receiveShadow>
-              <planeGeometry args={[100, 100]} />
-              <meshStandardMaterial color="#B0B5B9" />
-            </mesh>
-            {/* Plaza Pattern (Simple Lines) */}
-            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.04, 8]} receiveShadow>
-              <planeGeometry args={[20, 10]} />
-              <meshStandardMaterial color="#B0B5B9" />
-            </mesh>
-            {/* Zebra stripes approximation */}
-            {[...Array(10)].map((_, i) => (
-              <mesh key={i} rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.03, 4 + i * 1.5]} receiveShadow>
-                <planeGeometry args={[12, 0.8]} />
-                <meshStandardMaterial color="#ffffff" opacity={0.3} transparent />
-              </mesh>
-            ))}
+            {/* Complex 1: Blocks A and B */}
+            <DepartmentComplex
+              position={[0, 0, 15]}
+              blockALabel="Bloque A"
+              blockBLabel="Bloque B"
+              blockALogo="/logo.png"
+              blockBShowEspe={true}
+              blockAPosition={[10, 0, 10]}
+              blockARotation={[0, Math.PI / 2, 0]}
+            />
+
+            {/* Complex 2: Blocks C, D, G, H */}
+            <DepartmentComplex
+              position={[0, 0, -25]}
+              scale={[-1, 1, 1]}
+              blockALabel="Bloque C"
+              blockBLabel="Bloque D"
+              blockBLogo="/post.png"
+              blockBLogoSide="back"
+              blockBLogoShape="rectangle"
+              withAnnex={true}
+              isMirrored={true}
+            />
+
+            <Library position={[50, 0, -50]} rotation={[0, Math.PI, 0]} />
+
+            {/* --- AXIS SEQUENCE (Shifted to Z=25, Closer on X) --- */}
+            {/* Graderío (Front of complexes) - Rotated 180 from -PI/2 to PI/2 */}
+            <Bleachers position={[20, 0, 25]} rotation={[0, Math.PI / 2, 0]} />
+
+            {/* Plaza Cívica (Front of Graderío) */}
+            <CivicPlaza position={[35, 0.1, 25]} rotation={[0, Math.PI / 2, 0]} />
+
+            {/* Administrative (Front of Plaza) */}
+            <AdministrativeBuilding position={[55, 0, 25]} rotation={[0, -Math.PI / 2, 0]} />
+
+            {/* Entrance (Far Front) */}
+            <Entrance position={[120, 0, 45]} rotation={[0, Math.PI / 2, 0]} />
+
+            <Infrastructure />
+
+            {/* POINTS OF INTEREST */}
+            <POI
+              position={[20, 10, 25]}
+              label="Graderío"
+              description="Espacio principal para eventos deportivos y ceremonias de la universidad."
+              imageUrl="https://images.unsplash.com/photo-1576618148400-f54bed99fcf8?auto=format&fit=crop&q=80&w=3000&ixlib=rb-4.0.3"
+            />
+            <POI
+              position={[35, 5, 25]}
+              label="Plaza Cívica"
+              description="Punto de encuentro central para actos cívicos y culturales."
+              imageUrl="https://images.unsplash.com/photo-1496564203457-11bb12075d90?auto=format&fit=crop&q=80&w=2850&ixlib=rb-4.0.3"
+            />
+
           </group>
 
-          <ContactShadows opacity={0.4} scale={40} blur={2} far={10} resolution={256} color="#000000" />
-          <Sky sunPosition={[100, 20, 100]} turbidity={0.5} rayleigh={0.5} />
-          <OrbitControls
-            target={[0, 4, 0]}
-            minPolarAngle={0}
-            maxPolarAngle={Math.PI / 2.1}
-            makeDefault
-          />
+          {/* Ground Plane - Grass */}
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]} receiveShadow>
+            <planeGeometry args={[300, 300]} />
+            <meshStandardMaterial color="#4CAF50" roughness={0.9} />
+          </mesh>
+
+          {/* ContactShadows removed for performance */}
+          {/* <ContactShadows opacity={0.4} scale={40} blur={2} far={10} resolution={256} color="#000000" /> */}
+          {weatherMode === 'clear' && <Sky sunPosition={[100, 20, 100]} turbidity={0.5} rayleigh={0.5} />}
         </Suspense>
+
+        <OrbitControls
+          makeDefault
+          minPolarAngle={0}
+          maxPolarAngle={Math.PI / 2.1}
+          onStart={handleUserInteraction} // Stop cinematic flight on manual interaction
+        />
       </Canvas>
-      <Loader />
     </div>
   );
 };

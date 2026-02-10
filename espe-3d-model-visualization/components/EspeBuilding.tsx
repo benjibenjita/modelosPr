@@ -145,7 +145,7 @@ const StairwellTower = ({ position, height }: { position: [number, number, numbe
 
 // --- BUILDING BLOCKS ---
 
-const CentralBlock = ({ position }: { position: [number, number, number] }) => {
+export const CentralBlock = ({ position }: { position: [number, number, number] }) => {
   const height = 11;
   const centerY = height / 2;
   return (
@@ -163,23 +163,28 @@ const CentralBlock = ({ position }: { position: [number, number, number] }) => {
   );
 };
 
-const StandardBlock = ({
+export const StandardBlock = ({
   position,
   rotation = [0, 0, 0],
   label,
   logoPath,
   logoSide = 'front',
-  logoShape = 'circle'
+  logoShape = 'circle',
+  isMirrored = false,
+  showEspeLabel = false
 }: {
   position: [number, number, number],
   rotation?: [number, number, number],
   label?: string,
   logoPath?: string | null,
   logoSide?: 'front' | 'back',
-  logoShape?: 'circle' | 'rectangle'
+  logoShape?: 'circle' | 'rectangle',
+  isMirrored?: boolean,
+  showEspeLabel?: boolean
 }) => {
   const logoPos: [number, number, number] = logoSide === 'back' ? [0, 8, -2.8] : [-6, 5, 2.8];
   const logoRot: [number, number, number] = logoSide === 'back' ? [0, Math.PI, 0] : [0, 0, 0];
+  const mirroredScale: [number, number, number] = isMirrored ? [-1, 1, 1] : [1, 1, 1];
 
   return (
     <group position={position} rotation={rotation}>
@@ -192,6 +197,12 @@ const StandardBlock = ({
         <FacadeRow width={16} height={3.3} numBays={6} position={[0, 1.85, 0]} />
         <FacadeRow width={16} height={3.3} numBays={6} position={[0, 5.35, 0]} />
         <FacadeRow width={16} height={3.3} numBays={6} position={[0, 8.85, 0]} />
+
+        {showEspeLabel && (
+          <group position={[-5, 8.8, 0.35]} scale={mirroredScale}>
+            <Text fontSize={2} color="#333" anchorX="center" anchorY="middle">ESPE</Text>
+          </group>
+        )}
       </group>
 
       <group position={[0, 0, -2.5]} rotation={[0, Math.PI, 0]}>
@@ -205,7 +216,7 @@ const StandardBlock = ({
       {logoPath && (
         <TextureErrorBoundary fallback={<mesh position={[0, 7, 3]}><circleGeometry args={[1.5, 32]} /><meshStandardMaterial color="white" /></mesh>}>
           <React.Suspense fallback={<group position={[0, 7, 0]}><mesh><boxGeometry args={[1, 1, 1]} /><meshStandardMaterial color="red" /></mesh></group>}>
-            <group position={logoPos} rotation={logoRot} scale={0.8}>
+            <group position={logoPos} rotation={logoRot} scale={isMirrored ? [-0.8, 0.8, 0.8] : 0.8}>
               {logoShape === 'rectangle' ? <RectangularLogo texturePath={logoPath} /> : <BuildingLogo texturePath={logoPath} />}
             </group>
           </React.Suspense>
@@ -213,7 +224,7 @@ const StandardBlock = ({
       )}
 
       {label && (
-        <group position={[0, 11.5, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <group position={[0, 11.5, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={mirroredScale}>
           <Text fontSize={1} color="black" anchorX="center" anchorY="middle">{label}</Text>
         </group>
       )}
@@ -221,10 +232,12 @@ const StandardBlock = ({
   );
 };
 
-const HeroBlock = ({ position, rotation = [0, 0, 0], label, logoPath }: { position: [number, number, number], rotation?: [number, number, number], label?: string, logoPath?: string | null }) => {
+export const HeroBlock = ({ position, rotation = [0, 0, 0], label, logoPath, isMirrored = false }: { position: [number, number, number], rotation?: [number, number, number], label?: string, logoPath?: string | null, isMirrored?: boolean }) => {
   // Custom Layout for Hero Block (Block A) based on Image
   // Left: Solid Wall with Logo ("ESPE") | Center: Stairwell | Right: Windows
   // Total Width: 16
+  const mirroredScale: [number, number, number] = isMirrored ? [-1, 1, 1] : [1, 1, 1];
+
   return (
     <group position={position} rotation={rotation}>
 
@@ -239,14 +252,14 @@ const HeroBlock = ({ position, rotation = [0, 0, 0], label, logoPath }: { positi
           <meshStandardMaterial color={colors.concrete} />
         </mesh>
 
-        <group position={[0, 3.5, 0.3]}>
+        <group position={[0, 3.5, 0.3]} scale={mirroredScale}>
           <Text fontSize={2} color="#333" anchorX="center" anchorY="middle">
             ESPE
           </Text>
         </group>
 
         {logoPath && (
-          <group position={[0, 0, 0.3]} scale={0.9}>
+          <group position={[0, 0, 0.3]} scale={isMirrored ? [-0.9, 0.9, 0.9] : 0.9}>
             <TextureErrorBoundary fallback={<mesh><circleGeometry args={[1.5]} /><meshStandardMaterial color="white" /></mesh>}>
               <React.Suspense fallback={null}>
                 <BuildingLogo texturePath={logoPath} />
@@ -282,7 +295,7 @@ const HeroBlock = ({ position, rotation = [0, 0, 0], label, logoPath }: { positi
 
 
       {label && (
-        <group position={[0, 11.5, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <group position={[0, 11.5, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={mirroredScale}>
           <Text fontSize={1} color="black" anchorX="center" anchorY="middle">{label}</Text>
         </group>
       )}
@@ -290,17 +303,17 @@ const HeroBlock = ({ position, rotation = [0, 0, 0], label, logoPath }: { positi
   );
 }
 
-const AnnexBlock = ({ position, label, rotation = [0, 0, 0] }: { position: [number, number, number], label: string, rotation?: [number, number, number] }) => (
+export const AnnexBlock = ({ position, label, rotation = [0, 0, 0], isMirrored = false }: { position: [number, number, number], label: string, rotation?: [number, number, number], isMirrored?: boolean }) => (
   <group position={position} rotation={rotation}>
     <mesh position={[0, 5.5, 0]} castShadow receiveShadow><boxGeometry args={[4, 11, 8]} /><meshStandardMaterial color={colors.concrete} /></mesh>
     <mesh position={[0, 4, 4.1]}><boxGeometry args={[4.2, 0.6, 0.2]} /><meshStandardMaterial color={colors.concrete} /></mesh>
     <mesh position={[0, 7.5, 4.1]}><boxGeometry args={[4.2, 0.6, 0.2]} /><meshStandardMaterial color={colors.concrete} /></mesh>
     <mesh position={[0, 11, 0]}><boxGeometry args={[4.2, 0.4, 8.2]} /><meshStandardMaterial color={colors.concrete} /></mesh>
-    <group position={[0, 12, 0]} rotation={[-Math.PI / 2, 0, 0]}><Text fontSize={0.8} color="black" anchorX="center" anchorY="middle">{label}</Text></group>
+    <group position={[0, 12, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={isMirrored ? [-1, 1, 1] : [1, 1, 1]}><Text fontSize={0.8} color="black" anchorX="center" anchorY="middle">{label}</Text></group>
   </group>
 )
 
-const DepartmentComplex = ({
+export const DepartmentComplex = ({
   position,
   rotation = [0, 0, 0],
   scale = [1, 1, 1],
@@ -310,7 +323,11 @@ const DepartmentComplex = ({
   blockBLogo = null,
   blockBLogoSide = 'front',
   blockBLogoShape = 'circle',
-  withAnnex = false
+  blockBShowEspe = false,
+  withAnnex = false,
+  blockAPosition = [8, 0, 10], // Default original position
+  blockARotation = [0, 0, 0],   // Default original rotation
+  isMirrored = false
 }: {
   position: [number, number, number],
   rotation?: [number, number, number],
@@ -321,17 +338,21 @@ const DepartmentComplex = ({
   blockBLogo?: string | null,
   blockBLogoSide?: 'front' | 'back',
   blockBLogoShape?: 'circle' | 'rectangle',
-  withAnnex?: boolean
+  blockBShowEspe?: boolean,
+  withAnnex?: boolean,
+  blockAPosition?: [number, number, number],
+  blockARotation?: [number, number, number],
+  isMirrored?: boolean
 }) => {
   return (
     <group position={position} rotation={rotation} scale={scale}>
       <CentralBlock position={[0, 0, 0]} />
-      <StandardBlock position={[-8, 0, -10]} label={blockBLabel} logoPath={blockBLogo} logoSide={blockBLogoSide} logoShape={blockBLogoShape} />
-      <HeroBlock position={[8, 0, 10]} label={blockALabel} logoPath={blockALogo} />
+      <StandardBlock position={[-8, 0, -10]} label={blockBLabel} logoPath={blockBLogo} logoSide={blockBLogoSide} logoShape={blockBLogoShape} isMirrored={isMirrored} showEspeLabel={blockBShowEspe} />
+      <HeroBlock position={blockAPosition} rotation={blockARotation} label={blockALabel} logoPath={blockALogo} isMirrored={isMirrored} />
       {withAnnex && (
         <>
-          <AnnexBlock position={[8, 0, -4]} label="Bloque G" />
-          <AnnexBlock position={[-8, 0, 4]} label="Bloque H" />
+          <AnnexBlock position={[8, 0, -4]} label="Bloque G" isMirrored={isMirrored} />
+          <AnnexBlock position={[-8, 0, 4]} label="Bloque H" isMirrored={isMirrored} />
         </>
       )}
       <mesh position={[-4, 3, -6]}><boxGeometry args={[4, 6, 4]} /><meshStandardMaterial color={colors.concrete} /></mesh>
@@ -375,6 +396,8 @@ export const EspeBuilding: React.FC = () => {
         blockALogo="/logo.png"
         blockBLogo={null}
         withAnnex={false}
+        blockAPosition={[10, 0, 10]} // Shifted X to avoid collision with center
+        blockARotation={[0, Math.PI / 2, 0]} // Rotated 90 degrees
       />
       <DepartmentComplex
         position={[0, 0, -25]}
@@ -386,6 +409,7 @@ export const EspeBuilding: React.FC = () => {
         blockBLogoSide="back"
         blockBLogoShape="rectangle"
         withAnnex={true}
+        isMirrored={true}
       />
       <Walkway start={[0, 0, 3]} end={[0, 0, -13]} />
     </group>

@@ -6,7 +6,7 @@ interface BleachersProps {
   rotation: [number, number, number];
 }
 
-export const Bleachers: React.FC = () => {
+export const Bleachers: React.FC<BleachersProps> = ({ position, rotation }) => {
   const rows = 5;
   const seatsPerRow = 20; // Increased width
   const seatWidth = 0.6;
@@ -16,7 +16,7 @@ export const Bleachers: React.FC = () => {
   const aisleWidth = 1.5; // Central aisle
 
   return (
-    <group position={[0, 0, 8]} rotation={[0, 0, 0]}>
+    <group position={position} rotation={rotation}>
 
       {/* --- CONCRETE BASE (Stepped) --- */}
       {[...Array(rows)].map((_, rowIndex) => (
